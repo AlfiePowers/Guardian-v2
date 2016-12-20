@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.guardian.ui.Controller">
+   <children>
+      <Label layoutX="14.0" layoutY="14.0" text="Settings:">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <Button fx:id="startButton" layoutX="14.0" layoutY="49.0" mnemonicParsing="false" onAction="#startButtonClicked" prefHeight="25.0" prefWidth="61.0" text="Start" />
+      <Button layoutX="86.0" layoutY="49.0" mnemonicParsing="false" onAction="#stopButtonClicked" prefHeight="25.0" prefWidth="61.0" text="Stop" />
+      <Button layoutX="159.0" layoutY="49.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="61.0" text="Restart" />
+      <Button layoutX="234.0" layoutY="49.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="61.0" text="Pause" />
+      <Label layoutX="18.0" layoutY="283.0" text="Log:">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <TextArea id="Logger" fx:id="Logger" editable="false" layoutX="21.0" layoutY="311.0" prefHeight="329.0" prefWidth="340.0" />
+      <CheckBox layoutX="18.0" layoutY="116.0" mnemonicParsing="false" selected="true" text="Music Bot" />
+      <Label layoutX="14.0" layoutY="83.0" text="Enable / Disable Funcionality:">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <CheckBox layoutX="18.0" layoutY="144.0" mnemonicParsing="false" selected="true" text="Chat Bot" />
+      <Label layoutX="13.0" layoutY="655.0" text="Enable / Disable Funcionality:">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <TextField layoutX="128.0" layoutY="685.0" prefHeight="25.0" prefWidth="190.0" promptText="Token" />
+      <Label layoutX="18.0" layoutY="689.0" text="Discord Bot Token:" />
+      <Separator layoutX="2.0" layoutY="722.0" prefHeight="5.0" prefWidth="375.0" />
+      <Label layoutX="14.0" layoutY="737.0" text="Copyright © Alfie Powers 2016 ">
+         <font>
+            <Font name="System Bold" size="12.0" />
+         </font>
+      </Label>
+      <Separator layoutX="373.0" layoutY="-9.0" orientation="VERTICAL" prefHeight="784.0" prefWidth="5.0" />
+      <LineChart layoutX="903.0" layoutY="35.0" prefHeight="300.0" prefWidth="400.0">
+        <xAxis>
+          <CategoryAxis side="BOTTOM" />
+        </xAxis>
+        <yAxis>
+          <NumberAxis side="LEFT" />
+        </yAxis>
+      </LineChart>
+      <Button fx:id="TokenEnter" layoutX="318.0" layoutY="685.0" mnemonicParsing="false" text="Enter" />
+      <CheckBox layoutX="200.0" layoutY="116.0" mnemonicParsing="false" selected="true" text="Random Reddit Image" />
+      <Label layoutX="903.0" layoutY="14.0" text="Uptime:">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+      <Separator layoutX="887.0" orientation="VERTICAL" prefHeight="784.0" prefWidth="5.0" />
+      <Label layoutX="379.0" layoutY="14.0" text="Permissions:">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
+   </children>
+</Pane>

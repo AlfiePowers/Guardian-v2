@@ -14,7 +14,7 @@ public class Ping implements Command {
     @Override
     public void action(String[] args, MessageReceivedEvent event) {
 
-        event.getTextChannel().sendMessage("Memes!");
+        event.getTextChannel().sendMessage("Pong!");
         System.out.println("Command, !ping sent!");
     }
 

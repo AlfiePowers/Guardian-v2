@@ -14,7 +14,7 @@ public class HelloWorld implements Command {
 
     @Override
     public void action(String[] args, MessageReceivedEvent event) {
-        event.getTextChannel().sendMessage("Hello, World!");
+        event.getTextChannel().sendMessage("/tts Hello World");
     }
 
     @Override

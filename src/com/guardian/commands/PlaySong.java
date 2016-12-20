@@ -48,35 +48,25 @@ public class PlaySong implements Command {
             if (userRequest == null) {
                 event.getTextChannel().sendMessage(event.getAuthor().getAsMention() + " - You are not connected to a Voice channel - " +
                         "Please join a voice Channel that the bot can access to play Music!");
-            } else if (userRequest != null) {
+            } else {
                 VoiceChannel channel = userRequest;
-                if (requestGuild.getAudioManager().isConnected() == false) {
+                if (!requestGuild.getAudioManager().isConnected()) {
                     am.openAudioConnection(channel);
-                    //requestGuild.getAudioManager().openAudioConnection(channel);
+                    //requestGuild.getAudioManager().openAudioConnection(channel);  - Don't know if I will revert to this code, so I will keep it in
                 }
                 try {
                     playlist = Playlist.getPlaylist(url);
-
                     RemoteSource source = new RemoteSource(url);
                     AudioInfo info = new AudioInfo();
                     playlist = Playlist.getPlaylist(url);
 
-
                     // THIS HAS TO BE A CHECK - TL;DR: Without this, the bot will take the last song requested and overwrite the list.
                     if (sources.isEmpty()) {
-                        sources = new ArrayList<>(playlist.getSources());
-                        sources_loc = new ArrayList<>();
+                        sources = new ArrayList<>(playlist.getSources()); // Set's up the arrayList to inherit the sources from the Playlist.
+                        sources_loc = new ArrayList<>(); // Sources_loc is just to track where the source was requested by so the source plays on the right Audio Stream
                         // Music Player is defined here
                         mp = new MusicPlayer();
                     }
-
-                    /*
-                    if(mp.isPlaying() == false){
-                        for (int i = 0; i < sources.size(); i++){
-                            sources.remove(i);
-                        }
-                    }
-                    */
 
                     // Starts the monitor thread - Just used to monitor the status of the Music player - Offloaded to a thread so I don't worry about it
                     new Thread() {
@@ -88,20 +78,20 @@ public class PlaySong implements Command {
 
                     if (sources.size() == 1) {
                         sources.add((sources.size() - 1), source);
-                        sources_loc.add(requestGuild.getId().toString());
+                        sources_loc.add(requestGuild.getId());
                         System.out.println(sources_loc.get(sources_loc.size() - 1));
                         event.getTextChannel().sendMessage("Added " + source.getInfo().getTitle() + " to the queue as requested by " + event.getAuthor().getAsMention());
                         //Music Player section
                         for (int x = 0; x < sources.size(); x++) {
                             try {
-                                if (sources_loc.get(x) == event.getGuild().getId().toString()) {
+                                if (sources_loc.get(x) == event.getGuild().getId()) {
+                                    System.out.println("Found a match at: " + x);
                                     mp.getAudioQueue().add(sources.get(x));
                                     mp.setVolume(0.5f);
                                     queue = mp.getAudioQueue();
                                     mp.play();
                                     am.setSendingHandler(mp);
-                                    sources.remove(x);
-                                    sources_loc.remove(x);
+                                    sources.remove(x); sources_loc.remove(x); // Removes the song from the playlist - I really hope this works
                                 }
                             } catch (IndexOutOfBoundsException e) {
                                     /*
@@ -117,7 +107,7 @@ public class PlaySong implements Command {
                         event.getTextChannel().sendMessage("Added " + source.getInfo().getTitle() + "to the queue as requested by " + event.getAuthor().getAsMention());
                         //Music Player section
                         mp.getAudioQueue().add(sources.get(0));
-                        mp.setVolume(0.5f);
+                        mp.setVolume(0.15f);
                         queue = mp.getAudioQueue();
                         mp.play();
                         am.setSendingHandler(mp);

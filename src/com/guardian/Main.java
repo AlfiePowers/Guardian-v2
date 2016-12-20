@@ -54,7 +54,7 @@ public class Main {
         commands.put("helloworld", new HelloWorld());
         commands.put("status", new Status());
         commands.put("play", new PlaySong());
-        commands.put("image", new SubredditImage());
+        commands.put("reddit", new SubredditImage());
         commands.put("skip", new SkipSong());
         commands.put("queue", new QueueInfo());
         commands.put("help", new Help());

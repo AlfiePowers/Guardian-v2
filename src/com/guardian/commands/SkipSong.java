@@ -14,16 +14,7 @@ public class SkipSong implements Command {
 
     @Override
     public void action(String[] args, MessageReceivedEvent event) {
-        Permission permission;
 
-        /*if(PlaySong.queue.isEmpty()){
-            PlaySong.am.closeAudioConnection();
-            event.getTextChannel().sendMessage(event.getAuthor().getAsMention() + " - Queue concluded");
-        }else{
-            PlaySong.mp.skipToNext();
-            event.getTextChannel().sendMessage(event.getAuthor().getAsMention() + " - Skipped Song");
-        }
-        */
     }
 
     @Override

@@ -1,27 +1,25 @@
 package com.guardian.commands;
 
 import com.guardian.Command;
+import net.dean.jraw.RedditClient;
+import net.dean.jraw.http.UserAgent;
+import net.dean.jraw.http.oauth.Credentials;
+import net.dean.jraw.http.oauth.OAuthData;
+import net.dean.jraw.http.oauth.OAuthException;
+import net.dean.jraw.models.Listing;
+import net.dean.jraw.models.Submission;
+import net.dean.jraw.models.Subreddit;
+import net.dean.jraw.paginators.Sorting;
+import net.dean.jraw.paginators.SubredditPaginator;
+import net.dean.jraw.paginators.TimePeriod;
 import net.dv8tion.jda.events.message.MessageReceivedEvent;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.regex.PatternSyntaxException;
-
+import java.util.List;
 
 public class SubredditImage implements Command {
-    private final String HELP = "Usage: !helloworld";
-    public String URL_raw;
-    public String[] URL_FINAL;
+    private final String HELP = "Usage: !reddit [subreddit]";
+    private String[] message;
+    RedditClient client;
 
     @Override
     public boolean called(String[] args, MessageReceivedEvent event) {
@@ -30,69 +28,36 @@ public class SubredditImage implements Command {
 
     @Override
     public void action(String[] args, MessageReceivedEvent event) {
-
-        //When I wrote this, only God and I understood what I was doing
-        //Now, Even God's given up and pissed off.
-        //If you intend to edit this thinking "OH I CAN DO BETTER", Don't...
-        //If you hate XML, Close down the file now. This ain't gonna be pretty...
-        //Sincerely, me before I wrote this code...
-        URL_raw = event.getMessage().getContent().toString();
-        try{
-        URL_FINAL = URL_raw.split("\\s+");
-        }catch(PatternSyntaxException e){
-            // I was never much good at catching in Sport... Not much change here...
-            e.printStackTrace();
-        }
-        // Just gonna check there is a subreddit with that name - And that no other parameters have been passed.
-        for (int i = 0; i < 1; i++){
-            if(URL_FINAL[i] == "!image"){
+        message = event.getMessage().getContent().toString().split("\\s+");
+        for(int i = 0; i < 1; i++){
+            if(message[i] == "!reddit"){
                 return;
-            }else {
-                String subreddit = URL_FINAL[1];
-                System.out.println(subreddit);
-                BufferedInputStream in = null;
-                FileOutputStream fout = null;
+            }else{
+                    UserAgent agent = UserAgent.of("desktop", "com.guardian.commands", "v0.01", "Guardian_bot");
+                    Credentials credentials = Credentials.script("Guardian_bot", "2vdeN6kFq9j8", "ozpxmQhFlNnadw", "5QE_MY9QsO0r2LilBG8Qv9Q0CAE");
+                    client = new RedditClient(agent);
                 try {
-                    URL url = new URL("http://www.reddit.com/r/" + subreddit + "/.xml");
-                    URLConnection connection = url.openConnection();
-                    Document doc = parseXML(connection.getInputStream());
-                    NodeList descNodes = doc.getElementsByTagName("description");
-
-                    for(int x =0; x < descNodes.getLength(); x++){
-                        System.out.println(descNodes.item(i).getTextContent());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (Exception e) {
+                    OAuthData authData = client.getOAuthHelper().easyAuth(credentials);
+                    client.authenticate(authData);
+                } catch (OAuthException e) {
                     e.printStackTrace();
                 }
-
-                /*DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-                DocumentBuilder
-                */
-
+                getRandomSubreddit(event);
             }
         }
-        //URL subredditURL = new URL();
     }
-
-    public Document parseXML(InputStream stream) throws Exception {
-        DocumentBuilderFactory objDocumentBuilderFactory = null;
-        DocumentBuilder objDocumentBuilder = null;
-        Document doc = null;
-        try
-        {
-            objDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
-            objDocumentBuilder = objDocumentBuilderFactory.newDocumentBuilder();
-
-            doc = objDocumentBuilder.parse(stream);
+    public void getRandomSubreddit(MessageReceivedEvent event){
+        SubredditPaginator sp = new SubredditPaginator(client);
+        Submission sub = client.getRandomSubmission(message[1]);
+        if(sub.isSelfPost() == false && sub.getUpvoteRatio() > 0.75 && sub.getScore() > 5){
+            event.getTextChannel().sendMessage(event.getAuthor().getAsMention() + "```css\n" +
+                    "[Here's a random post from /r/" + message[1] + "!]\n" +
+                    "[Title] "+ sub.getTitle().toString() + "\n"+
+                    "[Upvotes] " + sub.getScore() + " At: " + (sub.getUpvoteRatio() * 100) + "% upvote percentage" +
+                    " ```" + sub.getUrl());
+        }else{
+            getRandomSubreddit(event);
         }
-        catch(Exception ex)
-        {
-            throw ex;
-        }
-
-        return doc;
     }
 
     @Override
