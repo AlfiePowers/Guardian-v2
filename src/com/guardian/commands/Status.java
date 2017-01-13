@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Status implements Command {
     private final String HELP = "Usage: !ping";
-    JDA api;
+    JDA jda;
     JDAPlayerInfo player_api;
     @Override
     public boolean called(String[] args, MessageReceivedEvent event) {
@@ -33,6 +33,7 @@ public class Status implements Command {
         event.getTextChannel().sendMessage("```-- Guardian Status -- \n " +
                 "Name: " + event.getJDA().getSelfInfo().getUsername() + " (ID: " + event.getJDA().getSelfInfo().getId() +")\n " +
                 "Uptime: " + days + " days, " +  hours + " hours, " + minutes + " minutes, " + (seconds - (minutes * 60)) + " seconds" +" ``` ");
+
 
     }
 

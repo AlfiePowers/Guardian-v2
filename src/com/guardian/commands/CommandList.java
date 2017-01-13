@@ -5,7 +5,7 @@ import net.dv8tion.jda.JDA;
 import net.dv8tion.jda.events.message.MessageReceivedEvent;
 
 public class CommandList implements Command {
-    private final String HELP = "Usage: !helloworld";
+    private final String HELP = "Usage: -helloworld";
     @Override
     public boolean called(String[] args, MessageReceivedEvent event) {
         return true;
