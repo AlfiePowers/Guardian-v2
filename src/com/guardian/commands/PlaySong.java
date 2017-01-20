@@ -1,134 +1,129 @@
+/*
+This section of code is modified from the LavaPlayer example.
+I didn't write most of this code, but I modified it for my handler.
+So there, I did something. It's spaghetti code but it works.
+ */
+
 package com.guardian.commands;
 
 import com.guardian.Command;
-import com.guardian.util.MusicMon;
-import net.dv8tion.jda.JDA;
-import net.dv8tion.jda.audio.player.Player;
-import net.dv8tion.jda.entities.Guild;
-import net.dv8tion.jda.entities.VoiceChannel;
-import net.dv8tion.jda.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.managers.AudioManager;
-import net.dv8tion.jda.managers.GuildManager;
-import net.dv8tion.jda.player.MusicPlayer;
-import net.dv8tion.jda.player.Playlist;
-import net.dv8tion.jda.player.source.AudioInfo;
-import net.dv8tion.jda.player.source.AudioSource;
-import net.dv8tion.jda.player.source.RemoteSource;
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.managers.AudioManager;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-public class PlaySong implements Command {
-    private JDA api;
-    private String message;
-    public static Guild requestGuild;
-    private Map<String, Player> players = new HashMap<>();
-    public static List<AudioSource> queue;
-    public static AudioManager am;
-    public static MusicPlayer mp;
-    private Playlist playlist;
-    private ArrayList<AudioSource> sources = new ArrayList<>();
-    private ArrayList<String> sources_loc = new ArrayList<>();
 
+public class PlaySong extends ListenerAdapter implements Command {
+    private final String HELP = "Usage: !ping";
+    private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    private final Map<Long, GuildMusicManager> musicManagers = new HashMap<>();
+
+    private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
+        long guildId = Long.parseLong(guild.getId());
+        GuildMusicManager musicManager = musicManagers.get(guildId);
+
+        if (musicManager == null) {
+            musicManager = new GuildMusicManager(playerManager);
+            musicManagers.put(guildId, musicManager);
+        }
+
+        guild.getAudioManager().setSendingHandler(musicManager.getSendHandler());
+
+        return musicManager;
+    }
     @Override
     public boolean called(String[] args, MessageReceivedEvent event) {
+        AudioSourceManagers.registerRemoteSources(playerManager);
+        AudioSourceManagers.registerLocalSource(playerManager);
+        String[] command = event.getMessage().getContent().split(" ", 2);
+        Guild guild = event.getGuild();
+
+        if (guild != null) {
+                loadAndPlay(event.getTextChannel(), command[1]);
+        }
+
+        super.onMessageReceived(event);
         return true;
     }
+    private void loadAndPlay(final TextChannel channel, final String trackUrl) {
+        final GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
 
-    @Override
-    public void action(String[] args, MessageReceivedEvent event) {
-        am = event.getGuild().getAudioManager();
+        playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                channel.sendMessage("Adding to queue " + track.getInfo().title).queue();
 
-        if (event.getMessage().getContent().equals("!play")) {
-            event.getTextChannel().sendMessage("Error! Missing Parameters! No URL / File to play specified!");
-        } else {
-            message = event.getMessage().getContent();
-            String url = message.replaceAll("!play", "");
-            requestGuild = event.getGuild();
-            VoiceChannel userRequest = requestGuild.getVoiceStatusOfUser(event.getAuthor()).getChannel();
-            if (userRequest == null) {
-                event.getTextChannel().sendMessage(event.getAuthor().getAsMention() + " - You are not connected to a Voice channel - " +
-                        "Please join a voice Channel that the bot can access to play Music!");
-            } else {
-                VoiceChannel channel = userRequest;
-                if (!requestGuild.getAudioManager().isConnected()) {
-                    am.openAudioConnection(channel);
-                    //requestGuild.getAudioManager().openAudioConnection(channel);  - Don't know if I will revert to this code, so I will keep it in
-                }
-                try {
-                    playlist = Playlist.getPlaylist(url);
-                    RemoteSource source = new RemoteSource(url);
-                    AudioInfo info = new AudioInfo();
-                    playlist = Playlist.getPlaylist(url);
-
-                    // THIS HAS TO BE A CHECK - TL;DR: Without this, the bot will take the last song requested and overwrite the list.
-                    if (sources.isEmpty()) {
-                        sources = new ArrayList<>(playlist.getSources()); // Set's up the arrayList to inherit the sources from the Playlist.
-                        sources_loc = new ArrayList<>(); // Sources_loc is just to track where the source was requested by so the source plays on the right Audio Stream
-                        // Music Player is defined here
-                        mp = new MusicPlayer();
-                    }
-
-                    // Starts the monitor thread - Just used to monitor the status of the Music player - Offloaded to a thread so I don't worry about it
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            new MusicMon();
-                        }
-                    }.start();
-
-                    if (sources.size() == 1) {
-                        sources.add((sources.size() - 1), source);
-                        sources_loc.add(requestGuild.getId());
-                        System.out.println(sources_loc.get(sources_loc.size() - 1));
-                        event.getTextChannel().sendMessage("Added " + source.getInfo().getTitle() + " to the queue as requested by " + event.getAuthor().getAsMention());
-                        //Music Player section
-                        for (int x = 0; x < sources.size(); x++) {
-                            try {
-                                if (sources_loc.get(x) == event.getGuild().getId()) {
-                                    System.out.println("Found a match at: " + x);
-                                    mp.getAudioQueue().add(sources.get(x));
-                                    mp.setVolume(0.5f);
-                                    queue = mp.getAudioQueue();
-                                    mp.play();
-                                    am.setSendingHandler(mp);
-                                    sources.remove(x); sources_loc.remove(x); // Removes the song from the playlist - I really hope this works
-                                }
-                            } catch (IndexOutOfBoundsException e) {
-                                    /*
-                                    I HAVE NO IDEA WHY IT IS DOING THIS!
-                                    For some reason Index is equal to the size and it hates that
-                                    If you know how to fix it, please tell me
-                                    This is an empty Catch so the console isn't spammed with an error that has no real issue
-                                    */
-                            }
-                        }
-                    } else {
-                        sources.add((sources.size() + 1), source);
-                        event.getTextChannel().sendMessage("Added " + source.getInfo().getTitle() + "to the queue as requested by " + event.getAuthor().getAsMention());
-                        //Music Player section
-                        mp.getAudioQueue().add(sources.get(0));
-                        mp.setVolume(0.15f);
-                        queue = mp.getAudioQueue();
-                        mp.play();
-                        am.setSendingHandler(mp);
-                        sources.remove(0);
-                    }
-
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-                }
+                play(channel.getGuild(), musicManager, track);
             }
 
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                AudioTrack firstTrack = playlist.getSelectedTrack();
+
+                if (firstTrack == null) {
+                    firstTrack = playlist.getTracks().get(0);
+                }
+
+                channel.sendMessage("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
+
+                play(channel.getGuild(), musicManager, firstTrack);
+            }
+
+            @Override
+            public void noMatches() {
+                channel.sendMessage("Nothing found by " + trackUrl).queue();
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                channel.sendMessage("Could not play: " + exception.getMessage()).queue();
+            }
+        });
+    }
+    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
+        connectToFirstVoiceChannel(guild.getAudioManager());
+
+        musicManager.scheduler.queue(track);
+    }
+    private static void connectToFirstVoiceChannel(AudioManager audioManager) {
+        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
+            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannels()) {
+                audioManager.openAudioConnection(voiceChannel);
+                break;
+            }
         }
     }
 
     @Override
+    public void action(String[] args, MessageReceivedEvent event) {
+
+    }
+
     public String help() {
-        return "Usage: !play [url]";
+        return HELP;
     }
 
     @Override
     public void executed(boolean success, MessageReceivedEvent event) {
         return;
     }
+
+
 }
