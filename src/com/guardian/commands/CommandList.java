@@ -1,8 +1,7 @@
 package com.guardian.commands;
 
 import com.guardian.Command;
-import net.dv8tion.jda.JDA;
-import net.dv8tion.jda.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 public class CommandList implements Command {
     private final String HELP = "Usage: -helloworld";
@@ -25,4 +24,5 @@ public class CommandList implements Command {
     public void executed(boolean success, MessageReceivedEvent event) {
         return;
     }
+
 }

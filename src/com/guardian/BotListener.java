@@ -1,8 +1,12 @@
 package com.guardian;
 
-import net.dv8tion.jda.events.ReadyEvent;
-import net.dv8tion.jda.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.hooks.ListenerAdapter;
+
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.ChannelType;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.events.ReadyEvent;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
 import java.util.logging.Logger;
 
@@ -10,22 +14,30 @@ public class BotListener extends ListenerAdapter {
     public static String init_text;
     public static String init_text1;
     private static final Logger logger = Logger.getAnonymousLogger();
+    JDA api;
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getMessage().getContent().startsWith("!") && event.getMessage().getAuthor().getId() != event.getJDA().getSelfInfo().getId())
+        Message message = event.getMessage();
+        String botname = "@" + event.getJDA().getSelfUser().getName();
+        if(event.isFromType(ChannelType.PRIVATE)) {
+            System.out.printf("[PM] %s: %s\n", event.getAuthor().getName(),
+                    event.getMessage().getContent());
+        }else if(message.getContent().contains(botname)){
+                init_text = event.getMessage().getContent();
+                init_text1 = init_text.replace("@" + event.getJDA().getSelfUser().getName(), "");
+                Main.handleConversation(event);
+        }else{
+            System.out.printf("[%s][%s] %s: %s\n", event.getGuild().getName(),
+                    event.getTextChannel().getName(), event.getMember().getEffectiveName(),
+                    event.getMessage().getContent());
             Main.handleCommand(Main.parser.parse(event.getMessage().getContent().toLowerCase(), event));
 
-        String botname = "@" + event.getJDA().getSelfInfo().getUsername();
-        if (event.getMessage().getContent().contains(botname) && event.getMessage().getAuthor().getId() != event.getJDA().getSelfInfo().getId()) {
-            init_text = event.getMessage().getContent();
-            init_text1 = init_text.replace("@" + event.getJDA().getSelfInfo().getUsername(), "");
-            Main.handleConversation(event);
         }
     }
 
     @Override
     public void onReady(ReadyEvent event) {
-        logger.info("Logged in as: " + event.getJDA().getSelfInfo().getUsername());
+        logger.info("Logged in as: " + event.getJDA().getSelfUser().getName());
     }
 }
