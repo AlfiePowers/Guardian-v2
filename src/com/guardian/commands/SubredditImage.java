@@ -12,8 +12,13 @@ import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.Sorting;
 import net.dean.jraw.paginators.SubredditPaginator;
 import net.dean.jraw.paginators.TimePeriod;
-import net.dv8tion.jda.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+import java.awt.*;
 import java.util.List;
 
 public class SubredditImage implements Command {
@@ -50,11 +55,17 @@ public class SubredditImage implements Command {
         SubredditPaginator sp = new SubredditPaginator(client);
         Submission sub = client.getRandomSubmission(message[1]);
         if(sub.isSelfPost() == false && sub.getUpvoteRatio() > 0.75 && sub.getScore() > 5){
-            event.getTextChannel().sendMessage(event.getAuthor().getAsMention() + "```css\n" +
-                    "[Here's a random post from /r/" + message[1] + "!]\n" +
-                    "[Title] "+ sub.getTitle().toString() + "\n"+
-                    "[Upvotes] " + sub.getScore() + " At: " + (sub.getUpvoteRatio() * 100) + "% upvote percentage" +
-                    " ```" + sub.getUrl());
+            EmbedBuilder status_builder = new EmbedBuilder();
+            status_builder.setImage(sub.getUrl());
+            status_builder.setColor(Color.green);
+            status_builder.setTitle("Random post from /r/" + message[1] + "!");
+            status_builder.setFooter("This is a random post from: " + sub.getPermalink(), null);
+            MessageEmbed embed = status_builder.build();
+            MessageBuilder mbuilder = new MessageBuilder();
+            mbuilder.setEmbed(embed);
+            status_builder.addField("[Title] " + sub.getTitle().toString(),"[Upvotes] " + sub.getScore() + " At: " + (sub.getUpvoteRatio() * 100) + "% upvote percentage" , false);
+            Message message = mbuilder.build();
+            event.getChannel().sendMessage(message).queue();
         }else{
             getRandomSubreddit(event);
         }

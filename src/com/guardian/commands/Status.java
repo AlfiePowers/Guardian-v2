@@ -1,20 +1,20 @@
 package com.guardian.commands;
 
 import com.guardian.Command;
-import net.dv8tion.jda.JDA;
-import net.dv8tion.jda.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.managers.AudioManager;
-import net.dv8tion.jda.player.JDAPlayerInfo;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
+import java.awt.*;
 import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryUsage;
 import java.lang.management.RuntimeMXBean;
 import java.util.concurrent.TimeUnit;
 
 public class Status implements Command {
     private final String HELP = "Usage: !ping";
     JDA jda;
-    JDAPlayerInfo player_api;
     @Override
     public boolean called(String[] args, MessageReceivedEvent event) {
         return true;
@@ -22,19 +22,23 @@ public class Status implements Command {
 
     @Override
     public void action(String[] args, MessageReceivedEvent event) {
-        String author = event.getMessage().getAuthor().getAsMention().toString();
-        event.getTextChannel().sendMessage(author);
         RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
         long uptime = rb.getUptime();
         long days = TimeUnit.MILLISECONDS.toDays((uptime));
         long hours = TimeUnit.MILLISECONDS.toHours((uptime));
         long minutes = TimeUnit.MILLISECONDS.toMinutes(uptime);
         long seconds = TimeUnit.MILLISECONDS.toSeconds(uptime);
-        event.getTextChannel().sendMessage("```-- Guardian Status -- \n " +
-                "Name: " + event.getJDA().getSelfInfo().getUsername() + " (ID: " + event.getJDA().getSelfInfo().getId() +")\n " +
-                "Uptime: " + days + " days, " +  hours + " hours, " + minutes + " minutes, " + (seconds - (minutes * 60)) + " seconds" +" ``` ");
-
-
+        EmbedBuilder status_builder = new EmbedBuilder();
+        status_builder.setColor(Color.green);
+        status_builder.setTitle("-- Guardian Status --");
+        status_builder.setFooter("Guardian is a bot Programmed by Mrporky#0325", null);
+        MessageEmbed embed = status_builder.build();
+        MessageBuilder mbuilder = new MessageBuilder();
+        mbuilder.setEmbed(embed);
+        status_builder.addField("Name:", event.getJDA().getSelfUser().getName() + " (ID: " + event.getJDA().getSelfUser().getId(), false);
+        status_builder.addField("Uptime:",  days + " days, " +  hours + " hours, " + minutes + " minutes, " + (seconds - (minutes * 60)) + " seconds", false);
+        Message message = mbuilder.build();
+        event.getChannel().sendMessage(message).queue();
     }
 
     @Override

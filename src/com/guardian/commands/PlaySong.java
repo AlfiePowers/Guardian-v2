@@ -18,9 +18,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -31,13 +29,18 @@ import java.util.Map;
 
 
 public class PlaySong extends ListenerAdapter implements Command {
+    private static GuildVoiceState guildVoiceState;
     private final String HELP = "Usage: !ping";
-    private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-    private final Map<Long, GuildMusicManager> musicManagers = new HashMap<>();
+    private MessageReceivedEvent event;
+    static GuildMusicManager musicManager;
+    static TextChannel channel;
 
-    private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
+    public  AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    public  Map<Long, GuildMusicManager> musicManagers = new HashMap<>();
+
+    public synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
         long guildId = Long.parseLong(guild.getId());
-        GuildMusicManager musicManager = musicManagers.get(guildId);
+        musicManager = musicManagers.get(guildId);
 
         if (musicManager == null) {
             musicManager = new GuildMusicManager(playerManager);
@@ -54,7 +57,7 @@ public class PlaySong extends ListenerAdapter implements Command {
         AudioSourceManagers.registerLocalSource(playerManager);
         String[] command = event.getMessage().getContent().split(" ", 2);
         Guild guild = event.getGuild();
-
+        channel = event.getTextChannel();
         if (guild != null) {
                 loadAndPlay(event.getTextChannel(), command[1]);
         }
@@ -68,8 +71,7 @@ public class PlaySong extends ListenerAdapter implements Command {
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                channel.sendMessage("Adding to queue " + track.getInfo().title).queue();
-
+                channel.sendMessage( "Adding to queue " + track.getInfo().title +" ,As requested by, "+ event.getAuthor().getAsMention().toString() + " - Added at Position " + track.getPosition()).queue();
                 play(channel.getGuild(), musicManager, track);
             }
 
@@ -81,7 +83,7 @@ public class PlaySong extends ListenerAdapter implements Command {
                     firstTrack = playlist.getTracks().get(0);
                 }
 
-                channel.sendMessage("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
+                channel.sendMessage( event.getAuthor().getAsMention() + "Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
 
                 play(channel.getGuild(), musicManager, firstTrack);
             }
@@ -102,6 +104,8 @@ public class PlaySong extends ListenerAdapter implements Command {
 
         musicManager.scheduler.queue(track);
     }
+
+
     private static void connectToFirstVoiceChannel(AudioManager audioManager) {
         if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
             for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannels()) {

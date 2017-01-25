@@ -1,7 +1,7 @@
 package com.guardian.commands;
 
 import com.guardian.Command;
-import net.dv8tion.jda.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.events.message.*;
 
 public class Ping implements Command {
     private final String HELP = "Usage: !ping";
@@ -14,7 +14,7 @@ public class Ping implements Command {
     @Override
     public void action(String[] args, MessageReceivedEvent event) {
 
-        event.getTextChannel().sendMessage("Pong!");
+        event.getTextChannel().sendMessage("Pong!").queue();
         System.out.println("Command, !ping sent!");
     }
 
@@ -27,4 +27,5 @@ public class Ping implements Command {
     public void executed(boolean success, MessageReceivedEvent event) {
         return;
     }
+
 }

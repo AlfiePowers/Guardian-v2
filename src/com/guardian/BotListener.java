@@ -28,9 +28,6 @@ public class BotListener extends ListenerAdapter {
                 init_text1 = init_text.replace("@" + event.getJDA().getSelfUser().getName(), "");
                 Main.handleConversation(event);
         }else{
-            System.out.printf("[%s][%s] %s: %s\n", event.getGuild().getName(),
-                    event.getTextChannel().getName(), event.getMember().getEffectiveName(),
-                    event.getMessage().getContent());
             Main.handleCommand(Main.parser.parse(event.getMessage().getContent().toLowerCase(), event));
 
         }

@@ -1,7 +1,7 @@
 package com.guardian.util;
 
-import com.guardian.commands.PlaySong;
-import net.dv8tion.jda.JDA;
+
+import net.dv8tion.jda.core.JDA;
 
 public class MusicMon {
     JDA jda;
@@ -14,7 +14,7 @@ public class MusicMon {
         Thread songStatus = new Thread();
         songStatus.start();
 
-        while (true) {
+        /*while (true) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -26,6 +26,7 @@ public class MusicMon {
                 }
             }
         }
+        */
 
     }
 }

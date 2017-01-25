@@ -4,15 +4,13 @@ import com.google.code.chatterbotapi.*;
 import com.guardian.commands.*;
 import com.guardian.util.SchedulerService;
 import com.guardian.util.SetBotGame;
-import net.dv8tion.jda.JDA;
-import net.dv8tion.jda.JDABuilder;
-import net.dv8tion.jda.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.managers.AccountManager;
+import net.dv8tion.jda.core.AccountType;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.events.message.*;
+import net.dv8tion.jda.core.managers.AccountManager;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import java.io.*;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 
 public class Main {
@@ -44,22 +42,20 @@ public class Main {
             }
         }
         try{
-            jda = new JDABuilder().addListener((new BotListener())).setBulkDeleteSplittingEnabled(false)
-                    .setBotToken(key).buildBlocking();
-            jda.setAutoReconnect(false);
+            jda = new JDABuilder(AccountType.BOT).setToken(key).buildBlocking();
+            jda.addEventListener(new BotListener());
+            jda.setAutoReconnect(true);
         }catch(Exception e){
             e.printStackTrace();
         }
         commands.put("ping", new Ping());
-        commands.put("helloworld", new HelloWorld());
         commands.put("status", new Status());
-        commands.put("play", new PlaySong());
+        commands.put("play", (Command) new PlaySong());
         commands.put("reddit", new SubredditImage());
         commands.put("skip", new SkipSong());
-        commands.put("queue", new QueueInfo());
         commands.put("help", new Help());
         commands.put("commands", new CommandList());
-        manager = jda.getAccountManager();
+        //manager = jda.getSelfUser().getManager();
         //Start the Set-up
         new Thread(){
             @Override
@@ -82,7 +78,6 @@ public class Main {
 
         if(commands.containsKey(cmd.invoke)){
             boolean safe = commands.get(cmd.invoke).called(cmd.args, cmd.event);
-
             if(safe){
                 commands.get(cmd.invoke).action(cmd.args, cmd.event);
                 commands.get(cmd.invoke).executed(safe, cmd.event);
@@ -98,7 +93,7 @@ public class Main {
             ChatterBotSession botsession = bot.createSession();
             String s = BotListener.init_text1;
             s = botsession.think(s);
-            event.getTextChannel().sendMessage(event.getMessage().getAuthor().getAsMention().toString() + " " + s);
+            event.getTextChannel().sendMessage(event.getMessage().getAuthor().getAsMention().toString() + " " + s).queue();
 
         }catch(Exception e){
             e.printStackTrace();
